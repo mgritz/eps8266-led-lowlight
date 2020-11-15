@@ -9,6 +9,8 @@
 
 #include "website.h"
 
+#include "RgbLedStrip.h"
+
 const long utcOffsetInSeconds = 3600 * 1;
 
 // Wir setzen den Webserver auf Port 80
@@ -26,6 +28,8 @@ String output4State = "off";
 // Die verwendeted GPIO Pins
 // D1 = GPIO5 und D2 = GPIO4 - einfach bei Google nach "Amica Pinout" suchen
 #define output4 D4
+
+RgbLedStrip strip(D5, D4, D6);
 
 void setup() {
   Serial.begin(115200);
@@ -70,12 +74,12 @@ void loop() {
         if (http_rx_header.indexOf("GET /4/on") >= 0) {
           Serial.println("GPIO 4 on");
           output4State = "on";
-          digitalWrite(output4, HIGH);
+          strip.set_color(0,255,0);
           http_rx_header = String();
         } else if (http_rx_header.indexOf("GET /4/off") >= 0) {
           Serial.println("GPIO 4 off");
           output4State = "off";
-          digitalWrite(output4, LOW);
+          strip.set_color(255,0,0);
           http_rx_header = String();
         }
 
