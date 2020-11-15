@@ -7,9 +7,9 @@
 // Definiert "ssid" und "password"
 #include "wifipass.h"
 
-const long utcOffsetInSeconds = 3600 * 2;
 #include "website.h"
 
+const long utcOffsetInSeconds = 3600 * 1;
 
 // Wir setzen den Webserver auf Port 80
 WiFiServer server(80);
