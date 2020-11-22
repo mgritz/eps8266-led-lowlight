@@ -6,6 +6,7 @@ RgbLedStrip::RgbLedStrip(int pinR, int pinG, int pinB)
 {
   mpr = pinR; mpg = pinG; mpb = pinB;
   set_color(0,0,0);
+  analogWriteRange(255);
 }
 
 void
