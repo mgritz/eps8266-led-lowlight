@@ -55,7 +55,19 @@ void setup() {
   timeClient.begin();
 }
 
+unsigned long fader_time = 0;
+void fader_time_push(void) {
+  fader_time = millis() + 250;
+}
+
 void loop() {
+
+  if (millis() > fader_time) {
+    strip.fade_step();
+    fader_time_push();
+    Serial.println(strip.toString());
+  }
+
   WiFiClient client = server.available();   // Hört auf Anfragen von Clients
 
   if (client) {                             // Falls sich ein neuer Client verbindet,
@@ -74,18 +86,26 @@ void loop() {
         if (http_rx_header.indexOf("GET /4/on") >= 0) {
           Serial.println("GPIO 4 on");
           output4State = "on";
-          strip.set_color(0,255,0);
+          strip.fade_to(0, 255, 0, 24);
+          fader_time_push();
           http_rx_header = String();
         } else if (http_rx_header.indexOf("GET /4/off") >= 0) {
           Serial.println("GPIO 4 off");
           output4State = "off";
-          strip.set_color(255,0,0);
+          strip.fade_to(255, 0, 0, 24);
+          fader_time_push();
           http_rx_header = String();
         }
 
         if (website_buildup_complete(client, c, output4State))
           break;
 
+      }
+
+      if (millis() > fader_time) {
+        strip.fade_step();
+        fader_time_push();
+        Serial.println(strip.toString());
       }
     }
     // Die Verbindung schließen

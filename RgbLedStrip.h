@@ -1,15 +1,35 @@
 #ifndef _RGBLEDSTRIP_H_
 #define _RGBLEDSTRIP_H_
 
-class RgbLedStrip {
-public:
-  RgbLedStrip(int pinR, int pinG, int pinB);
-  void set_color(int r, int g, int b);
+#include <Arduino.h>
 
-private:
-  RgbLedStrip();
-  int mpr, mpg, mpb;
-  bool minvert;
+class RgbColor {
+  public:
+  int r, g, b;
+  RgbColor(int red, int green, int blue);
+  String toString(void);
+  friend RgbColor operator+(const RgbColor& a, const RgbColor& b);
+  friend RgbColor operator-(const RgbColor& a, const RgbColor& b);
+  friend RgbColor operator/(const RgbColor& a, const int s);
+};
+
+class RgbLedStrip {
+  public:
+    RgbLedStrip(int pinR, int pinG, int pinB);
+    void set_color(int r, int g, int b);
+    void fade_to(int r, int g, int b, int steps);
+    void fade_step(void);
+    String toString(void);
+
+
+  private:
+    RgbLedStrip();
+    void set_color(const RgbColor& c);
+
+    RgbColor io;
+    RgbColor currentState;
+    RgbColor fadeState;
+    int stepsRem;
 };
 
 
