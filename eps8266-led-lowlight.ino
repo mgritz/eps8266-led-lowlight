@@ -28,6 +28,7 @@ String output4State = "off";
 // Die verwendeted GPIO Pins
 // D1 = GPIO5 und D2 = GPIO4 - einfach bei Google nach "Amica Pinout" suchen
 #define output4 D4
+#define input0 D0
 
 RgbLedStrip strip(D5, D4, D6);
 
@@ -60,16 +61,24 @@ void fader_time_push(void) {
   fader_time = millis() + 250;
 }
 
-void loop() {
 
+void lowlight_loop_body() {
+
+  // Update LED fading.
   if (millis() > fader_time) {
     strip.fade_step();
     fader_time_push();
     Serial.println(strip.toString());
   }
 
-  WiFiClient client = server.available();   // Hört auf Anfragen von Clients
+}
 
+
+void loop() {
+
+  lowlight_loop_body();
+
+  WiFiClient client = server.available();   // Hört auf Anfragen von Clients
   if (client) {                             // Falls sich ein neuer Client verbindet,
     Serial.println("Neuer Client.");        // Ausgabe auf den seriellen Monitor
     // Zeige Uhrzeit
@@ -102,11 +111,8 @@ void loop() {
 
       }
 
-      if (millis() > fader_time) {
-        strip.fade_step();
-        fader_time_push();
-        Serial.println(strip.toString());
-      }
+      lowlight_loop_body();
+
     }
     // Die Verbindung schließen
     client.stop();
