@@ -18,6 +18,7 @@ class RgbLedStrip {
     RgbLedStrip(int pinR, int pinG, int pinB);
     void set_color(int r, int g, int b);
     void fade_to(int r, int g, int b, int steps);
+    void fade_to(RgbColor c, int steps);
     void fade_step(void);
     String toString(void);
 

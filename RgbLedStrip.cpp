@@ -70,11 +70,16 @@ RgbLedStrip::set_color(int r, int g, int b)
 }
 
 void
+RgbLedStrip::fade_to(RgbColor c, int steps)
+{
+  fadeState = (currentState - c) / steps;
+  stepsRem = steps;
+}
+
+void
 RgbLedStrip::fade_to(int r, int g, int b, int steps)
 {
-  const RgbColor tgt(r, g, b);
-  fadeState = (currentState - tgt) / steps;
-  stepsRem = steps;
+  fade_to(RgbColor(r, g, b), steps);
 }
 
 void
