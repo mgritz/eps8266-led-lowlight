@@ -61,14 +61,46 @@ void fader_time_push(void) {
   fader_time = millis() + 250;
 }
 
+// Settings, these have to go into EEPROM later
+#define LED_COLOR_ON RgbColor(255, 0, 0)
+#define LED_COLOR_OFF RgbColor(0, 0, 0)
+#define LED_FADE_SPEED 24
+#define TURN_OFF_DELAY 10
+
+
+unsigned long last_movement = 0;
+bool last_on = false;
 
 void lowlight_loop_body() {
 
+  const unsigned long now = millis();
+  const bool movement = (digitalRead(input0) == HIGH);
+
+  //
   // Update LED fading.
-  if (millis() > fader_time) {
+  //
+
+  const unsigned long now = millis();
+  const bool movement = (digitalRead(input0) == HIGH);
+
+  if (lowlight_enabled && movement) {
+    last_movement = now;
+    if (!last_on) {
+      Serial.println("On-Event. Fading to " + LED_COLOR_ON.toString()));
+      strip.fade_to(LED_COLOR_ON, LED_FADE_SPEED);
+      last_on = true;
+    }
+  } else if (last_on && (!movement) && (now > last_movement + (TURN_OFF_DELAY * 1000))) {
+      Serial.println("Off-Event. Fading to " + LED_COLOR_OFF.toString());
+    strip.fade_to(LED_COLOR_OFF, LED_FADE_SPEED);
+    last_on = false;
+  }
+
+  if (now > fader_time) {
     strip.fade_step();
     fader_time_push();
-    Serial.println(strip.toString());
+    if (strip.isFading())
+      Serial.println(strip.toString());
   }
 
 }

@@ -21,7 +21,7 @@ class RgbLedStrip {
     void fade_to(RgbColor c, int steps);
     void fade_step(void);
     String toString(void);
-
+    inline bool isFading(void) const { return (stepsRem > 0); };
 
   private:
     RgbLedStrip();
