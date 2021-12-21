@@ -12,12 +12,13 @@
 #include "RgbLedStrip.h"
 
 const long utcOffsetInSeconds = 3600 * 1;
+const unsigned long ntpUpdateInterval = 3600 * 1000; //ms
 
 // Wir setzen den Webserver auf Port 80
 WiFiServer server(80);
 // NTP Client
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds, ntpUpdateInterval);
 
 // Eine Variable um den HTTP Request zu speichern
 String http_rx_header;
@@ -73,8 +74,20 @@ bool last_on = false;
 
 void lowlight_loop_body() {
 
-  const unsigned long now = millis();
-  const bool movement = (digitalRead(input0) == HIGH);
+  //
+  // Keep track of local time and decide about mode
+  //
+
+  if(timeClient.update())
+    Serial.println("NTP: now " + timeClient.getFormattedTime());
+  // Even if false, time may be correct - NTPClient::update complies with the
+  // update period configured in the constructor. The time getters extrapolate
+  // from the last update using millis().
+
+  const bool is_night = true; // TODO select from time range using timeClinet.getHours / .getMinutes
+
+  // enable lowlight if it is night, or if NTP was never successful.
+  const bool lowlight_enabled = (is_night || (! timeClient.isTimeSet()));
 
   //
   // Update LED fading.
@@ -102,7 +115,6 @@ void lowlight_loop_body() {
     if (strip.isFading())
       Serial.println(strip.toString());
   }
-
 }
 
 
@@ -113,9 +125,6 @@ void loop() {
   WiFiClient client = server.available();   // Hört auf Anfragen von Clients
   if (client) {                             // Falls sich ein neuer Client verbindet,
     Serial.println("Neuer Client.");        // Ausgabe auf den seriellen Monitor
-    // Zeige Uhrzeit
-    timeClient.update();
-    Serial.println(timeClient.getFormattedTime());
 
     while (client.connected()) {            // wiederholen so lange der Client verbunden ist
       if (client.available()) {             // Fall ein Byte zum lesen da ist,
@@ -127,14 +136,10 @@ void loop() {
         if (http_rx_header.indexOf("GET /4/on") >= 0) {
           Serial.println("GPIO 4 on");
           output4State = "on";
-          strip.fade_to(0, 255, 0, 24);
-          fader_time_push();
           http_rx_header = String();
         } else if (http_rx_header.indexOf("GET /4/off") >= 0) {
           Serial.println("GPIO 4 off");
           output4State = "off";
-          strip.fade_to(255, 0, 0, 24);
-          fader_time_push();
           http_rx_header = String();
         }
 
