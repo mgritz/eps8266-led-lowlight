@@ -7,6 +7,7 @@ class RgbColor {
   public:
   int r, g, b;
   RgbColor(int red, int green, int blue);
+  RgbColor(String rgb);
   String toString(void);
   friend RgbColor operator+(const RgbColor& a, const RgbColor& b);
   friend RgbColor operator-(const RgbColor& a, const RgbColor& b);

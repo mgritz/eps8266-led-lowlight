@@ -5,10 +5,29 @@ RgbColor::RgbColor(int red, int green, int blue)
 : r(red), g(green), b(blue)
 {}
 
+RgbColor::RgbColor(String rgb)
+{
+  if (rgb[0] == '#')
+    rgb = rgb.substring(1);
+
+  r = strtol(rgb.substring(0,2).c_str(), NULL, 16);
+  g = strtol(rgb.substring(2,4).c_str(), NULL, 16);
+  b = strtol(rgb.substring(4,6).c_str(), NULL, 16);
+}
+
 String
 RgbColor::toString(void)
 {
-  return "R: " + String(r) + " G: " + String(g) + " B: " + String(b);
+  String rv = "#";
+
+  const String sr = String(r, HEX);
+  rv += (sr.length() == 1) ? ("0" + sr) : sr;
+  const String sg = String(g, HEX);
+  rv += (sg.length() == 1) ? ("0" + sg) : sg;
+  const String sb = String(b, HEX);
+  rv += (sb.length() == 1) ? ("0" + sb) : sb;
+
+  return rv;
 }
 
 RgbColor operator+(const RgbColor& a, const RgbColor& b)
@@ -49,8 +68,8 @@ RgbLedStrip::RgbLedStrip(int pinR, int pinG, int pinB)
 String
 RgbLedStrip::toString(void)
 {
-  return "LED: " + currentState.toString() + '\n'
-       + "to   " + fadeState.toString() + "in " + String(stepsRem) + '\n';
+  return "LED:" + currentState.toString() + '\n'
+       + "to  " + fadeState.toString() + " in " + String(stepsRem) + '\n';
 }
 
 void
