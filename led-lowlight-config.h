@@ -13,4 +13,20 @@ typedef struct {
 	int fader_speed;
 } LedConfig;
 
+static inline String
+hmString(int h, int min)
+{
+	String rv = (h < 10) ? ("0" + String(h)) : String(h);
+	rv += ":" + ((min < 10) ? ("0" + String(min)) : String(min));
+	return rv;
+}
+
+// will be something like "hh%3Amm"
+static inline void
+htmlTime2hm(String s, int *h, int *min)
+{
+	*h = s.substring(0, 2).toInt();
+	*min = s.substring(5, 7).toInt();
+}
+
 #endif /* include guard */

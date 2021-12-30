@@ -24,9 +24,6 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds, ntpUpdateInterv
 // Eine Variable um den HTTP Request zu speichern
 String http_rx_header;
 
-// Hier wird der aktuelle Status des Relais festgehalten
-String output4State = "off";
-
 // Die verwendeted GPIO Pins
 // D1 = GPIO5 und D2 = GPIO4 - einfach bei Google nach "Amica Pinout" suchen
 #define output4 D4
@@ -126,6 +123,34 @@ void lowlight_loop_body() {
   }
 }
 
+// parse a string for a key and return value. Dividers are '&' and ' '.
+// if something is found, trunkate it away from the input string.
+String
+parseForValue(String *rx, const String &name)
+{
+  if (rx->length() <= name.length())
+    return String();
+
+  int i = rx->indexOf(name);
+  if (i < 0) {
+    return String();
+  }
+  i += name.length();
+
+  int e = rx->indexOf('&', i); // ...name=value&nextname...
+  if (e < 0)
+    e = rx->indexOf(' ', i); // ...name=value HTTP/... (last entry)
+
+  if (e <= i + 1) // ...name=&nextname... (name found but no value) or not found
+    return String();
+  else {
+    String rv = rx->substring(i, e);
+    *rx = rx->substring(e);
+    return rv;
+  }
+}
+
+bool in_request = false;
 
 void loop() {
 
@@ -141,15 +166,52 @@ void loop() {
         Serial.write(c);                    // gebe es auf dem seriellen Monitor aus
         http_rx_header += c;
 
-        // Hier werden die GPIO Pins ein- oder ausgeschaltet
-        if (http_rx_header.indexOf("GET /4/on") >= 0) {
-          Serial.println("GPIO 4 on");
-          output4State = "on";
-          http_rx_header = String();
-        } else if (http_rx_header.indexOf("GET /4/off") >= 0) {
-          Serial.println("GPIO 4 off");
-          output4State = "off";
-          http_rx_header = String();
+        // circularly drop everything that is not a http request (starting with GET)
+        // required because browsers may send all kinds of bull in addition to the
+        // acutal request. This may even include someting that looks exactly like
+        // the request but starts with Referer:, and is outdated.
+        if (http_rx_header.indexOf("GET ") >= 0)
+          in_request = true;
+        else if (http_rx_header.length() > 4)
+          http_rx_header = http_rx_header.substring(1);
+
+        // parse the string once after a newline ends the GET
+        if (in_request && c == '\n') {
+          in_request = false;
+
+          String v = parseForValue(&http_rx_header, String("ledcolor=%23"));
+          if (v.length() > 0)
+          {
+            v = "#" + v;
+            v.toCharArray(led_cfg.on_color, 8);
+            Serial.println("Set color to " + v);
+          }
+
+          v = parseForValue(&http_rx_header, String("time_on="));
+          if (v.length() > 0)
+          {
+            htmlTime2hm(v, &led_cfg.time_from_hr, &led_cfg.time_from_min);
+            Serial.println("Set time on to " + hmString(led_cfg.time_from_hr, led_cfg.time_from_min));
+          }
+
+          v = parseForValue(&http_rx_header, String("time_to="));
+          if (v.length() > 0)
+          {
+            htmlTime2hm(v, &led_cfg.time_to_hr, &led_cfg.time_to_min);
+            Serial.println("Set time off to " + hmString(led_cfg.time_to_hr, led_cfg.time_to_min));
+          }
+
+          v = parseForValue(&http_rx_header, String("delay="));
+          if (v.length() > 0) {
+            led_cfg.turn_off_delay_s = v.toInt();
+            Serial.println("Set delay to " + v);
+          }
+
+          v = parseForValue(&http_rx_header, String("speed="));
+          if (v.length() > 0) {
+            led_cfg.fader_speed= v.toInt();
+            Serial.println("Set speed to " + v);
+          }
         }
 
         if (website_buildup_complete(client, c, &led_cfg))

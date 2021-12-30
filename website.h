@@ -32,10 +32,10 @@ website_buildup_complete(WiFiClient &client, const char nextChar, LedConfig* cfg
       client.println("<input id=\"ledcolor\" type=\"color\" name=\"ledcolor\" value=\"" + String(cfg->on_color) + "\"><br>");
 
       client.println("<label for=\"time_on\">Start time</label>");
-      client.println("<input id=\"time_on\" type=\"time\" name=\"time_on\" value=\"" + String(cfg->time_from_hr) + ":" + String(cfg->time_from_min) + "\"><br>");
+      client.println("<input id=\"time_on\" type=\"time\" name=\"time_on\" value=\"" + hmString(cfg->time_from_hr, cfg->time_from_min) + "\"><br>");
 
       client.println("<label for=\"time_to\">End time</label>");
-      client.println("<input id=\"time_to\" type=\"time\" name=\"time_to\" value=\"" + String(cfg->time_to_hr) + ":" + String(cfg->time_to_min) + "\"><br>");
+      client.println("<input id=\"time_to\" type=\"time\" name=\"time_to\" value=\"" + hmString(cfg->time_to_hr, cfg->time_to_min) + "\"><br>");
 
       client.println("<label for=\"delay\">Turn-off delay</label>");
       client.println("<input id=\"delay\" type=\"number\" name=\"delay\" min=\"0\" value=\"" + String(cfg->turn_off_delay_s) + "\"><br>");
