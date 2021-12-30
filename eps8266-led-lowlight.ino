@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include "led-lowlight-config.h"
 
 // Hier geben wir den WLAN Namen (SSID) und den Zugansschlüssel ein
 // Definiert "ssid" und "password"
@@ -31,6 +32,16 @@ String output4State = "off";
 #define output4 D4
 #define input0 D0
 
+LedConfig led_cfg = {
+  .on_color = "#ff0000",
+  .time_from_min = 0,
+  .time_from_hr = 20,
+  .time_to_min = 0,
+  .time_to_hr = 8,
+  .turn_off_delay_s = 10,
+  .fader_speed = 24,
+};
+
 RgbLedStrip strip(D5, D4, D6);
 
 void setup() {
@@ -39,6 +50,9 @@ void setup() {
   pinMode(output4, OUTPUT);
   // ... und erstmal auf LOW setzen
   digitalWrite(output4, LOW);
+
+  // initialize config settings
+  // TODO load from eeprom
 
   // Per WLAN mit dem Netzwerk verbinden
   Serial.print("Connecting to ");
@@ -62,12 +76,7 @@ void fader_time_push(void) {
   fader_time = millis() + 250;
 }
 
-// Settings, these have to go into EEPROM later
-#define LED_COLOR_ON RgbColor(255, 0, 0)
 #define LED_COLOR_OFF RgbColor(0, 0, 0)
-#define LED_FADE_SPEED 24
-#define TURN_OFF_DELAY 10
-
 
 unsigned long last_movement = 0;
 bool last_on = false;
@@ -99,13 +108,13 @@ void lowlight_loop_body() {
   if (lowlight_enabled && movement) {
     last_movement = now;
     if (!last_on) {
-      Serial.println("On-Event. Fading to " + LED_COLOR_ON.toString()));
-      strip.fade_to(LED_COLOR_ON, LED_FADE_SPEED);
+      Serial.println("On-Event. Fading to " + String(led_cfg.on_color));
+      strip.fade_to(RgbColor(String(led_cfg.on_color)), led_cfg.fader_speed);
       last_on = true;
     }
-  } else if (last_on && (!movement) && (now > last_movement + (TURN_OFF_DELAY * 1000))) {
+  } else if (last_on && (!movement) && (now > last_movement + (led_cfg.turn_off_delay_s * 1000))) {
       Serial.println("Off-Event. Fading to " + LED_COLOR_OFF.toString());
-    strip.fade_to(LED_COLOR_OFF, LED_FADE_SPEED);
+    strip.fade_to(LED_COLOR_OFF, led_cfg.fader_speed);
     last_on = false;
   }
 
@@ -143,7 +152,7 @@ void loop() {
           http_rx_header = String();
         }
 
-        if (website_buildup_complete(client, c, output4State))
+        if (website_buildup_complete(client, c, &led_cfg))
           break;
 
       }
