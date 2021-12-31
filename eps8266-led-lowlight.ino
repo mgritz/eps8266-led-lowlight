@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <EEPROM.h>
 #include "led-lowlight-config.h"
 
 // Hier geben wir den WLAN Namen (SSID) und den Zugansschlüssel ein
@@ -24,11 +25,6 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds, ntpUpdateInterv
 // Eine Variable um den HTTP Request zu speichern
 String http_rx_header;
 
-// Die verwendeted GPIO Pins
-// D1 = GPIO5 und D2 = GPIO4 - einfach bei Google nach "Amica Pinout" suchen
-#define output4 D4
-#define input0 D0
-
 LedConfig led_cfg = {
   .on_color = "#ff0000",
   .time_from_min = 0,
@@ -43,13 +39,19 @@ RgbLedStrip strip(D5, D4, D6);
 
 void setup() {
   Serial.begin(115200);
-  // Die definierten GPIO Pins als output definieren ...
-  pinMode(output4, OUTPUT);
-  // ... und erstmal auf LOW setzen
-  digitalWrite(output4, LOW);
 
-  // initialize config settings
-  // TODO load from eeprom
+  // initialize config settings if they are validly stored
+  EEPROM.begin(4095);
+  char magic = '#';
+  EEPROM.get(0, magic);
+  if (magic == '#') {
+    Serial.println("Reading EEPROM");
+    EEPROM.get(0, led_cfg);
+    Serial.println("EEPROM read. Color: " + String(led_cfg.on_color));
+  } else {
+    EEPROM.put(0, led_cfg);
+    EEPROM.commit();
+  }
 
   // Per WLAN mit dem Netzwerk verbinden
   Serial.print("Connecting to ");
@@ -100,7 +102,7 @@ void lowlight_loop_body() {
   //
 
   const unsigned long now = millis();
-  const bool movement = (digitalRead(input0) == HIGH);
+  const bool movement = (digitalRead(D0) == HIGH);
 
   if (lowlight_enabled && movement) {
     last_movement = now;
@@ -212,6 +214,9 @@ void loop() {
             led_cfg.fader_speed= v.toInt();
             Serial.println("Set speed to " + v);
           }
+
+          EEPROM.put(0, led_cfg);
+          EEPROM.commit();
         }
 
         if (website_buildup_complete(client, c, &led_cfg))
