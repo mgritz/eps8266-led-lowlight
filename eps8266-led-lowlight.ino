@@ -80,6 +80,38 @@ void fader_time_push(void) {
 unsigned long last_movement = 0;
 bool last_on = false;
 
+inline bool
+is_night(void)
+{
+  // with no NTP it's always night.
+  if (!timeClient.isTimeSet())
+    return true;
+
+  const int now_h = timeClient.getHours();
+  const int on_h = led_cfg.time_from_hr;
+  const int off_h = led_cfg.time_to_hr;
+
+  // we are in the middle of the day
+  if ((now_h < on_h) && (now_h > off_h))
+    return false;
+
+  // we are in the middle of the night
+  if ((now_h > on_h) || (now_h < off_h))
+    return true;
+
+  const int now_min = timeClient.getMinutes();
+  const int on_min = led_cfg.time_from_min;
+  const int off_min = led_cfg.time_to_min;
+
+  // we are in the turn-on hour (evening)
+  if (now_h == on_h)
+    return (now_min >= on_min);
+
+  // we are in the turn-off hour (morning)
+  if (now_h == off_h)
+    return (now_min < off_min);
+}
+
 void lowlight_loop_body() {
 
   //
@@ -88,14 +120,6 @@ void lowlight_loop_body() {
 
   if(timeClient.update())
     Serial.println("NTP: now " + timeClient.getFormattedTime());
-  // Even if false, time may be correct - NTPClient::update complies with the
-  // update period configured in the constructor. The time getters extrapolate
-  // from the last update using millis().
-
-  const bool is_night = true; // TODO select from time range using timeClinet.getHours / .getMinutes
-
-  // enable lowlight if it is night, or if NTP was never successful.
-  const bool lowlight_enabled = (is_night || (! timeClient.isTimeSet()));
 
   //
   // Update LED fading.
@@ -104,7 +128,7 @@ void lowlight_loop_body() {
   const unsigned long now = millis();
   const bool movement = (digitalRead(D0) == HIGH);
 
-  if (lowlight_enabled && movement) {
+  if (is_night() && movement) {
     last_movement = now;
     if (!last_on) {
       Serial.println("On-Event. Fading to " + String(led_cfg.on_color));
