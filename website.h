@@ -41,7 +41,7 @@ website_buildup_complete(WiFiClient &client, const char nextChar, LedConfig* cfg
       client.println("<input id=\"delay\" type=\"number\" name=\"delay\" min=\"0\" value=\"" + String(cfg->turn_off_delay_s) + "\"><br>");
 
       client.println("<label for=\"speed\">Fading speed</label>");
-      client.println("<input id=\"speed\" type=\"number\" name=\"speed\" min=\"0\" max=\"30\" value=\"" + String(cfg->fader_speed) + "\"><br>");
+      client.println("<input id=\"speed\" type=\"number\" name=\"speed\" min=\"0\" max=\"255\" value=\"" + String(cfg->fader_speed) + "\"><br>");
 
       client.println("<input type=\"submit\">");
       client.println("</form>");

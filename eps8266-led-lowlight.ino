@@ -32,7 +32,7 @@ LedConfig led_cfg = {
   .time_to_min = 0,
   .time_to_hr = 8,
   .turn_off_delay_s = 10,
-  .fader_speed = 24,
+  .fader_speed = 240,
 };
 
 RgbLedStrip strip(D5, D4, D6);
@@ -72,7 +72,7 @@ void setup() {
 
 unsigned long fader_time = 0;
 void fader_time_push(void) {
-  fader_time = millis() + 250;
+  fader_time = millis() + 25;
 }
 
 #define LED_COLOR_OFF RgbColor(0, 0, 0)
