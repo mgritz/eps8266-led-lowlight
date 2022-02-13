@@ -5,20 +5,21 @@
 
 class RgbColor {
   public:
-  int r, g, b;
-  RgbColor(int red, int green, int blue);
+  float r, g, b;
+  RgbColor(float red, float green, float blue);
   RgbColor(String rgb);
   String toString(void);
+  String toStepString(void);
   friend RgbColor operator+(const RgbColor& a, const RgbColor& b);
   friend RgbColor operator-(const RgbColor& a, const RgbColor& b);
-  friend RgbColor operator/(const RgbColor& a, const int s);
+  friend RgbColor operator/(const RgbColor& a, const float s);
 };
 
 class RgbLedStrip {
   public:
     RgbLedStrip(int pinR, int pinG, int pinB);
-    void set_color(int r, int g, int b);
-    void fade_to(int r, int g, int b, int steps);
+    void set_color(float r, float g, float b);
+    void fade_to(float r, float g, float b, int steps);
     void fade_to(RgbColor c, int steps);
     void fade_step(void);
     String toString(void);
@@ -30,7 +31,7 @@ class RgbLedStrip {
 
     RgbColor io;
     RgbColor currentState;
-    RgbColor fadeState;
+    RgbColor fadeStep;
     int stepsRem;
 };
 
