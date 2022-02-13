@@ -35,7 +35,7 @@ LedConfig led_cfg = {
   .fader_speed = 240,
 };
 
-RgbLedStrip strip(D5, D4, D6);
+RgbLedStrip strip(D5, D6, D4);
 
 void setup() {
   Serial.begin(115200);
