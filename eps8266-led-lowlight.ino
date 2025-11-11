@@ -110,6 +110,8 @@ is_night(void)
   // we are in the turn-off hour (morning)
   if (now_h == off_h)
     return (now_min < off_min);
+
+  return false;
 }
 
 void lowlight_loop_body() {

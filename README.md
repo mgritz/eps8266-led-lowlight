@@ -28,3 +28,8 @@ Configuration options are supposed to be available for the following parameters:
 * LED strip is controlled through three transistors for the color lines.
 * Time tracking is done using NTP.
 * Configuration is availabe through a website and stored in internal EEPROM.
+
+## Dependencies
+
+* Arduino Library `NTPClient`, for the time.
+* esp8266 Board Package, provided by [http://arduino.esp8266.com/stable/package_esp8266com_index.json]
